@@ -8,6 +8,7 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(jsonData ? jsonData.length / itemsPerPage : 0);
 
@@ -16,6 +17,11 @@ const App = () => {
 
     const formData = new FormData();
     formData.append("csvFile", event.target.filePath.files[0]);
+
+    // Reset upload progress, error, and data before making the API call
+    setUploadProgress(0);
+    setUploadError(null);
+    setJsonData(null);
 
     try {
       const response = await axios.post(`${baseUrl}/read-csv`, formData, {
@@ -31,6 +37,11 @@ const App = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error:", error);
+      if (error.response && error.response.status === 400) {
+        setUploadError("It is not a CSV");
+      } else {
+        setUploadError("An error occurred while uploading the file");
+      }
     }
   };
 
@@ -71,6 +82,7 @@ const App = () => {
       <div>
         <h3>Upload Progress: {uploadProgress}%</h3>
         <progress value={uploadProgress} max={100}></progress>
+        {uploadError && <p>{uploadError}</p>}
       </div>
       <br></br>
 
